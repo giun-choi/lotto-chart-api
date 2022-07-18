@@ -44,7 +44,7 @@ class Lotto {
 
         noInfoArr.push(noInfo);
         winInfoArr.push(winInfo);
-        console.log('no :', no);
+
         no++;
       }
 

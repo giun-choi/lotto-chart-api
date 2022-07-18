@@ -45,7 +45,7 @@ class LottoStorage {
       if (conn) conn.release();
     }    
 
-    if ((noRows?.affectedRows > 0) && (winRows?.affectedRows > 0)) {
+    if ((noRows?.affectedRows === noInfoArr.length) && (winRows?.affectedRows === winInfoArr.length)) {
       return {
         successcode: 1,
         insertNoRows: noRows?.affectedRows,
@@ -67,7 +67,7 @@ class LottoStorage {
 
       await conn.beginTransaction();
 
-      await conn.batch("TRUNCATE TABLE tb_win_no", []);
+      await conn.batch("DELETE FROM tb_win_no", []);
 
       const sql = `INSERT INTO tb_win_no(
         drw_no,
@@ -90,7 +90,7 @@ class LottoStorage {
     } finally {
       if (conn) conn.release();
     }
-    if (rows?.affectedRows > 0) return { successcode: 1, insertRows: rows?.affectedRows };
+    if (rows?.affectedRows === noInfoArr.length) return { successcode: 1, insertRows: rows?.affectedRows };
     return { successcode: -1, insertRows: rows?.affectedRows };
   }
 
@@ -122,7 +122,7 @@ class LottoStorage {
     } finally {
       if (conn) conn.release();
     }
-    if (rows?.affectedRows > 0) return { successcode: 1, insertRows: rows?.affectedRows };
+    if (rows?.affectedRows === winInfoArr.length) return { successcode: 1, insertRows: rows?.affectedRows };
     return { successcode: -1, insertRows: rows?.affectedRows };
   }
 }
