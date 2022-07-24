@@ -136,6 +136,70 @@ class LottoStorage {
     }
     return { successcode: 1, insertRow: row?.affectedRows };
   }
+
+  static async getMonthInfo(year, month) {
+    let conn, rows;
+    const like = `%${year}-${month}%`;
+
+    try {
+      conn = await pool.getConnection();
+
+      const sql = `SELECT 
+        drw_no,
+        drwt_no1,
+        drwt_no2, 
+        drwt_no3, 
+        drwt_no4, 
+        drwt_no5, 
+        drwt_no6, 
+        bnus_no, 
+        DATE_FORMAT(drw_no_date, '%Y-%m-%d') AS drw_no_date
+      FROM tb_win_no WHERE drw_no_date LIKE ? 
+      ORDER BY drw_no DESC`;
+
+      rows = await conn.query(sql, [like]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (conn) conn.release();
+    }
+    if (rows) {
+      return { successcode: 1, rows };
+    }
+    return { successcode: -1 };
+  }
+
+  static async getYearInfo(year) {
+    let conn, rows;
+    const like = `%${year}%`;
+
+    try {
+      conn = await pool.getConnection();
+
+      const sql = `SELECT 
+        drw_no, 
+        drwt_no1, 
+        drwt_no2, 
+        drwt_no3, 
+        drwt_no4, 
+        drwt_no5, 
+        drwt_no6, 
+        bnus_no, 
+        DATE_FORMAT(drw_no_date, '%Y-%m-%d') AS drw_no_date 
+      FROM tb_win_no WHERE drw_no_date LIKE ? 
+      ORDER BY drw_no DESC`;
+
+      rows = await conn.query(sql, like);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (conn) conn.release();
+    }
+    if (rows) {
+      return { successcode: 1, rows };
+    }
+    return { successcode: -1 };
+  }
 }
 
 module.exports = LottoStorage;

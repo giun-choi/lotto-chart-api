@@ -135,7 +135,17 @@ class Lotto {
     return result;
   }
 
+  async getMonthInfo() {
+    const { year = '', month = '' } = this.body;
+    const result = await LottoStorage.getMonthInfo(year, month);
+    return result;
+  }
 
+  async getYearInfo() {
+    const { year = '' } = this.body;
+    const result = await LottoStorage.getYearInfo(year);
+    return result;
+  }
 }
 
 module.exports = Lotto;
