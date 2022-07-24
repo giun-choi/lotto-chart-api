@@ -4,7 +4,7 @@ const pool = require("../config/pool");
 
 class LottoStorage {
   static async init(noInfoArr = [], winInfoArr = []) {
-    let conn, noRows, winRows;
+    let conn, noRow, winRow;
     
     try {
       conn = await pool.getConnection();
@@ -34,8 +34,8 @@ class LottoStorage {
         drw_no_date
       ) VALUES (?, ?, ?, ?, ?, ?)`;
 
-      noRows = await conn.batch(noSql, noInfoArr);
-      winRows = await conn.batch(winSql, winInfoArr);
+      noRow = await conn.batch(noSql, noInfoArr);
+      winRow = await conn.batch(winSql, winInfoArr);
 
       await conn.commit();
     } catch (err) {
@@ -45,29 +45,44 @@ class LottoStorage {
       if (conn) conn.release();
     }    
 
-    if ((noRows?.affectedRows === noInfoArr.length) && (winRows?.affectedRows === winInfoArr.length)) {
-      return {
-        successcode: 1,
-        insertNoRows: noRows?.affectedRows,
-        insertWinRows: winRows?.affectedRows
-      };
-    }
-    return {
-      successcode: -1,
-      insertNoRows: noRows?.affectedRows,
-      insertWinRows: winRows?.affectedRows
+    const insertRow = {
+      insertNoRow: noRow?.affectedRows,
+      insertWinRow: winRow?.affectedRows
     };
+
+    if ((noRow?.affectedRows === noInfoArr.length) && (winRow?.affectedRows === winInfoArr.length)) {
+      return { successcode: 1, ...insertRow };
+    }
+    return { successcode: -1, ...insertRow };
   }
 
-  static async initNo(noInfoArr = []) {
-    let conn, rows;
+  static async getLastInfo() {
+    let conn, row;
+
+    try {
+      conn = await pool.getConnection();
+
+      const sql = `SELECT 
+        (SELECT drw_no FROM tb_win_no ORDER BY drw_no DESC LIMIT 1) AS no,
+        (SELECT drw_no FROM tb_win_info ORDER BY drw_no DESC LIMIT 1) AS win`;
+
+      row = await conn.batch(sql, []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (conn) conn.release();
+    }
+    const { no = 0, win = 0 } = row[0];
+    return { lottoNo: no, lottoWin: win };
+  }
+
+  static async updateLastestNo(lastestNoArr = []) {
+    let conn, row;
 
     try {
       conn = await pool.getConnection();
 
       await conn.beginTransaction();
-
-      await conn.batch("DELETE FROM tb_win_no", []);
 
       const sql = `INSERT INTO tb_win_no(
         drw_no,
@@ -81,7 +96,7 @@ class LottoStorage {
         drw_no_date
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-      rows = await conn.batch(sql, noInfoArr);
+      row = await conn.batch(sql, lastestNoArr);
 
       await conn.commit();
     } catch (err) {
@@ -90,19 +105,16 @@ class LottoStorage {
     } finally {
       if (conn) conn.release();
     }
-    if (rows?.affectedRows === noInfoArr.length) return { successcode: 1, insertRows: rows?.affectedRows };
-    return { successcode: -1, insertRows: rows?.affectedRows };
+    return { successcode: 1, insertRow: row?.affectedRows };
   }
 
-  static async initWin(winInfoArr = []) {
-    let conn, rows;
+  static async updateLastestWin(lastestWinArr = []) {
+    let conn, row;
 
     try {
       conn = await pool.getConnection();
 
       await conn.beginTransaction();
-
-      await conn.batch("TRUNCATE TABLE tb_win_info", []);
 
       const sql = `INSERT INTO tb_win_info(
         drw_no,
@@ -113,7 +125,7 @@ class LottoStorage {
         drw_no_date
       ) VALUES (?, ?, ?, ?, ?, ?)`;
 
-      rows = await conn.batch(sql, winInfoArr);
+      row = await conn.batch(sql, lastestWinArr);
 
       await conn.commit();
     } catch (err) {
@@ -122,8 +134,7 @@ class LottoStorage {
     } finally {
       if (conn) conn.release();
     }
-    if (rows?.affectedRows === winInfoArr.length) return { successcode: 1, insertRows: rows?.affectedRows };
-    return { successcode: -1, insertRows: rows?.affectedRows };
+    return { successcode: 1, insertRow: row?.affectedRows };
   }
 }
 

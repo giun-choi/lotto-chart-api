@@ -16,10 +16,10 @@ class Lotto {
     const winInfoArr = [];
 
     while (loop) {
-      const lottoApiUrl = getLottoApiUrl(String(no));
+      const lottoApiUrl = getLottoApiUrl(String(no++));
       const res = await axios.get(lottoApiUrl);
-      const info = res.data;
-      const returnValue = info.returnValue
+      const info = res?.data;
+      const returnValue = info?.returnValue
 
       if (returnValue === "success") {
         const noInfo = [
@@ -44,13 +44,11 @@ class Lotto {
 
         noInfoArr.push(noInfo);
         winInfoArr.push(winInfo);
-
-        no++;
       }
 
       if (returnValue === "fail") loop = false;
       if ((returnValue !== "success") && (returnValue !== "fail")) {
-        console.error('예상 밖의 결과값을 받았습니다.', returnValue);
+        console.error('The response format is different.\n', returnValue);
         loop = false;
       }
     }
@@ -62,19 +60,19 @@ class Lotto {
     return { successcode: -1 };    
   }
 
-  async initNo() {
-    let no = 1;
+  async updateLastestNo() {
     let loop = true;
-    const noInfoArr = [];
+    let { lottoNo = 0 } = await LottoStorage.getLastInfo();
+    const lastestNoArr = [];
 
     while (loop) {
-      const lottoApiUrl = getLottoApiUrl(String(no));
+      const lottoApiUrl = getLottoApiUrl(String(++lottoNo));
       const res = await axios.get(lottoApiUrl);
-      const info = res.data;
-      const returnValue = info.returnValue
+      const info = res?.data;
+      const returnValue = info?.returnValue;
 
       if (returnValue === "success") {
-        const noInfo = [
+        const lastestNoInfo = [
           info.drwNo,
           info.drwtNo1,
           info.drwtNo2,
@@ -85,39 +83,35 @@ class Lotto {
           info.bnusNo,
           info.drwNoDate
         ];
-        
-        noInfoArr.push(noInfo);
 
-        no++;
+        lastestNoArr.push(lastestNoInfo);      
       }
 
       if (returnValue === "fail") loop = false;
       if ((returnValue !== "success") && (returnValue !== "fail")) {
-        console.error('예상 밖의 결과값을 받았습니다.', returnValue);
+        console.error('The response format is different.\n', returnValue);
         loop = false;
       }
     }
 
-    if (noInfoArr.length > 0) {
-      const result = await LottoStorage.initNo(noInfoArr);
-      return result;
-    }
-    return { successcode: -1 };
+    if (lastestNoArr.length === 0) return { successcode: 1, msg: "You already have the latest data." };
+    const result = await LottoStorage.updateLastestNo(lastestNoArr);
+    return result;
   }
 
-  async initWin() {
-    let no = 1;
+  async updateLastestWin() {
     let loop = true;
-    const winInfoArr = [];
+    let { lottoWin = 0 } = await LottoStorage.getLastInfo();
+    const lastestWinArr = [];
 
     while (loop) {
-      const lottoApiUrl = getLottoApiUrl(String(no));
+      const lottoApiUrl = getLottoApiUrl(String(++lottoWin));
       const res = await axios.get(lottoApiUrl);
-      const info = res.data;
-      const returnValue = info.returnValue
+      const info = res?.data;
+      const returnValue = info?.returnValue;
 
       if (returnValue === "success") {
-        const winInfo = [
+        const lastestWinInfo = [
           info.drwNo,
           info.firstAccumamnt,
           info.firstPrzwnerCo,
@@ -126,24 +120,22 @@ class Lotto {
           info.drwNoDate
         ];
 
-        winInfoArr.push(winInfo);
-
-        no++;
+        lastestWinArr.push(lastestWinInfo);      
       }
 
       if (returnValue === "fail") loop = false;
       if ((returnValue !== "success") && (returnValue !== "fail")) {
-        console.error('예상 밖의 결과값을 받았습니다.', returnValue);
+        console.error('The response format is different.\n', returnValue);
         loop = false;
       }
     }
 
-    if (winInfoArr.length > 0) {
-      const result = await LottoStorage.initWin(winInfoArr);
-      return result;
-    }
-    return { successcode: -1 };
+    if (lastestWinArr.length === 0) return { successcode: 1, msg: "You already have the latest data." };
+    const result = await LottoStorage.updateLastestWin(lastestWinArr);
+    return result;
   }
+
+
 }
 
 module.exports = Lotto;

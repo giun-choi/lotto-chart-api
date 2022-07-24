@@ -8,14 +8,19 @@ const api = {
     const result = await lotto.init();
     res.json(result);
   },
-  initNo: async (req, res) => {
+  getLastNo: async (req, res) => {
     const lotto = new Lotto();
-    const result = await lotto.initNo();
+    const result = await lotto.getLastNo();
     res.json(result);
   },
-  initWin: async (req, res) => {
+  updateLastestNo: async (req, res) => {
     const lotto = new Lotto();
-    const result = await lotto.initWin();
+    const result = await lotto.updateLastestNo();
+    res.json(result);
+  },
+  updateLastestWin: async (req, res) => {
+    const lotto = new Lotto();
+    const result = await lotto.updateLastestWin();
     res.json(result);
   }
 }
